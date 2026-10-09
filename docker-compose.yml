@@ -1,0 +1,8 @@
+services:
+  desafio-target:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: desafio-target:latest
+    stdin_open: true
+    tty: true
