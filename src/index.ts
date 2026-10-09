@@ -1,22 +1,28 @@
 import { readFile } from "node:fs/promises";
-import { calcularComissoesPorVendedor } from "./comissoes/comissoes.js";
+import { iniciarMenu } from "./cli/menu.js";
+
 import type { Venda } from "./comissoes/types.js";
+import type { Produto } from "./estoque/types.js";
 
-const caminho = new URL("../data/vendas.json", import.meta.url);
-const conteudo = await readFile(caminho, "utf-8");
+async function main(): Promise<void> {
+  const caminhoVendas = new URL("../data/vendas.json", import.meta.url);
+  const caminhoEstoque = new URL("../data/estoque.json", import.meta.url);
 
-const dados = JSON.parse(conteudo) as { vendas: Venda[] };
+  const [conteudoVendas, conteudoEstoque] = await Promise.all([
+    readFile(caminhoVendas, "utf-8"),
+    readFile(caminhoEstoque, "utf-8"),
+  ]);
 
-const comissoes = calcularComissoesPorVendedor(dados.vendas);
+  const dadosVendas = JSON.parse(conteudoVendas) as { vendas: Venda[] };
+  const dadosEstoque = JSON.parse(conteudoEstoque) as { estoque: Produto[] };
 
-const formatador = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
+  await iniciarMenu(dadosVendas.vendas, dadosEstoque.estoque);
+}
+
+main().catch((erro: unknown) => {
+  console.error(
+    erro instanceof Error ? erro.message : "Não foi possível iniciar."
+  );
+
+  process.exitCode = 1;
 });
-
-console.table(
-  Object.entries(comissoes).map(([vendedor, comissao]) => ({
-    vendedor,
-    comissao: formatador.format(comissao),
-  }))
-);
